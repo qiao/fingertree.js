@@ -7,30 +7,100 @@
     module.exports = factory();
   } else {
     // browser global
-    root.returnExports = factory();
+    root.FingerTree = factory();
   }
 }(this, function () {
 
-  function Node2(a, b) {
-    this.a = a;
-    this.b = b;
+  var create = Object.create || function (o) {
+    function F() {}
+    F.prototype = o;
+    return new F();
+  };
+  
+  function Digit(measurer, items) {
+    this.items = items;
+    this.length = items.length;
+    this.measurer = measurer;
   }
 
-  function Node3(a, b, c) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
+  Digit.prototype.measure = function () {
+    var items = this.items;
+    var measurer = this.measurer;
+
+    var m = measurer.identity();
+    for (var i = 0; i < items.length; ++i) {
+      m = measurer.sum(m, measurer.measure(items[i]));
+    }
+    return m;
+  };
+
+  Digit.prototype.get = function (index) {
+    return this.items[index];
+  };
+
+  Digit.prototype.first = function () {
+    return this.items[0];
+  };
+
+  Digit.prototype.last = function () {
+    return this.items[this.items.length - 1];
+  };
+
+  function Node(measurer, items) {
+    this.items = items;
+     
+    var m = measurer.identity();
+    for (var i = 0; i < items.length; ++i) {
+      m = measurer.sum(m, measurer.measure(items[i]));
+    }
+    this.memoizedMeasure = m;
   }
 
+  Node.prototype.measure = function () {
+    return this.memoizedMeasure;
+  };
 
-  function Empty() { }
+  function FingerTree(measurer) {
+    this.measurer = measurer || {
+      identity: function () {
+        return 0;
+      },
+      measure: function (v) {
+        return 1;
+      },
+      sum: function (a, b) {
+        return a + b;
+      }
+    };
+  } 
+
+  FingerTree.fromArray = fromArray;
+
+  function Empty(measurer) {
+    FingerTree.call(this, measurer);
+    this.memoizedMeasure = this.measurer.identity();
+  }
+
+  Empty.prototype = create(FingerTree.prototype);
+
+  Empty.prototype.measure = function () {
+    return this.memoizedMeasure;
+  };
 
   Empty.prototype.addFirst = function (v) {
-    return new Single(v);
+    return new Single(this.measurer, v);
   };
 
   Empty.prototype.addLast = function (v) {
-    return new Single(v);
+    return new Single(this.measurer, v);
+  };
+
+  Empty.prototype.peekFirst = function () {
+    return null;
+  };
+
+  Empty.prototype.peekLast = function () {
+    return null;
   };
 
   Empty.prototype.isEmpty = function () {
@@ -42,16 +112,41 @@
   };
 
 
-  function Single(value) {
+
+  function Single(measurer, value) {
+    FingerTree.call(this, measurer);
     this.value = value;
+    this.memoizedMeasure = this.measurer.measure(value);
   }
 
+  Single.prototype = create(FingerTree.prototype);
+
+  Single.prototype.measure = function () {
+    return this.memoizedMeasure;
+  };
+
   Single.prototype.addFirst = function (v) {
-    return new Deep([v], new Empty(), [this.value]);
+    var measurer = this.measurer;
+    return new Deep(measurer,
+                    new Digit(measurer, [v]),
+                    new Empty(measurer),
+                    new Digit(measurer, [this.value]));
   };
 
   Single.prototype.addLast = function (v) {
-    return new Deep([this.value], new Empty(), [v]);
+    var measurer = this.measurer;
+    return new Deep(measurer,
+                    new Digit(measurer, [this.value]),
+                    new Empty(measurer),
+                    new Digit(measurer, [v]));
+  };
+
+  Single.prototype.peekFirst = function () {
+    return this.value;
+  };
+
+  Single.prototype.peekLast = function () {
+    return this.value;
   };
 
   Single.prototype.isEmpty = function () {
@@ -63,37 +158,68 @@
   };
 
 
-
-  function Deep(left, mid, right) {
+  function Deep(measurer, left, mid, right) {
+    FingerTree.call(this, measurer);
     this.left = left;
     this.mid = mid;
     this.right = right;
+    this.memoizedMeasure = null;
   }
+
+  Deep.prototype = create(FingerTree.prototype);
+
+  Deep.prototype.measure = function () {
+    var measurer = this.measurer;
+    if (this.memoizedMeasure === null) {
+      this.memoizedMeasure = measurer.sum(
+        measurer.sum(this.left.measure(), this.mid.measure()),
+        this.right.measure());
+    }
+    return this.memoizedMeasure;
+  };
 
   Deep.prototype.addFirst = function (v) {
     var left = this.left;
     var mid = this.mid;
     var right = this.right;
+    var measurer = this.measurer;
 
     if (left.length === 4) {
-      return new Deep([v, left[0]],
-                      mid.addFirst(new Node3(left[1], left[2], left[3])),
+      return new Deep(measurer,
+                      new Digit(measurer, [v, left.get(0)]),
+                      mid.addFirst(new Node(measurer, [left.get(1), left.get(2), left.get(3)])),
                       right);
     }
-    return new Deep([v].concat(left), mid, right);
+    return new Deep(measurer,
+                    new Digit(measurer, [v].concat(left.items)),
+                    mid,
+                    right);
   };
 
   Deep.prototype.addLast = function (v) {
     var left = this.left;
     var mid = this.mid;
     var right = this.right;
+    var measurer = this.measurer;
 
     if (right.length === 4) {
-      return new Deep(left,
-                      mid.addLast(new Node3(right[0], right[1], right[2])),
-                      [right[3], v]);
+      return new Deep(measurer,
+                      left,
+                      mid.addLast(new Node(measurer, [right[0], right[1], right[2]])),
+                      new Digit(measurer, [right[3], v]));
     }
-    return new Deep(left, mid, right.concat[v]);
+    return new Deep(measurer,
+                    left,
+                    mid,
+                    new Digit(measurer, right.items.concat([v])));
+  };
+
+  Deep.prototype.peekFirst = function () {
+    return this.left.first();
+  };
+
+  Deep.prototype.peekLast = function () {
+    return this.right.last();
   };
 
   Deep.prototype.isEmpty = function () {
@@ -123,27 +249,29 @@
     if (t2 instanceof Single) {
       return append(t1, ts).addLast(t2.value);
     }
-    return new Deep(t1.left,
+    return new Deep(t1.measurer,
+                    t1.left,
                     app3(t1.mid,
-                         nodes(t1.right.concat(ts).concat(t2.left)),
+                         nodes(t1.measurer, t1.right.itemsconcat(ts).concat(t2.left.items)),
                          t2.mid),
                     t2.right);
   }
 
-  function nodes(xs) {
+  function nodes(m, xs) {
     switch (xs.length) {
-      case 2: return [new Node2(xs[0], xs[1])];
-      case 3: return [new Node3(xs[0], xs[1], xs[2])];
-      case 4: return [new Node2(xs[0], xs[1]), new Node2(xs[2], xs[3])];
-      case 5: return [new Node3(xs[0], xs[1], xs[2]),
-                      new Node2(xs[3], xs[4])];
-      case 6: return [new Node3(xs[0], xs[1], xs[2]),
-                      new Node3(xs[3], xs[4], xs[5])];
-      case 7: return [new Node3(xs[0], xs[1], xs[2]),
-                      new Node3(xs[3], xs[4], xs[5])];
-      case 8: return [new Node3(xs[0], xs[1], xs[2]),
-                      new Node3(xs[3], xs[4], xs[5]),
-                      new Node2(xs[6], xs[7])];
+      case 2: return new Digit(m, [new Node(m, xs)]);
+      case 3: return new Digit(m, [new Node(m, xs)]);
+      case 4: return new Digit(m, [new Node(m, [xs[0], xs[1]]),
+                                   new Node(m, [xs[2], xs[3]])]);
+      case 5: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
+                                   new Node(m, [xs[3], xs[4]])]);
+      case 6: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
+                                   new Node(m, [xs[3], xs[4], xs[5]])]);
+      case 7: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
+                                   new Node(m, [xs[3], xs[4], xs[5]])]);
+      case 8: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
+                                   new Node(m, [xs[3], xs[4], xs[5]]),
+                                   new Node(m, [xs[6], xs[7]])]);
       default: throw new Error('invalid number of nodes');
     }
   }
@@ -162,11 +290,9 @@
     return tree;
   }
 
-  function toTree(xs) {
-    return prepend(new Empty(), xs);
+  function fromArray(xs, measurer) {
+    return prepend(new Empty(measurer), xs);
   }
 
-  return {
-    toTree: toTree
-  };
+  return FingerTree;
 }));
