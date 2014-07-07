@@ -61,16 +61,15 @@
   };
 
   function FingerTree(measurer) {
-    this.measurer = measurer || {
-      identity: function () {
-        return 0;
-      },
+    this.measurer = {
+      identity: measurer.identity,
       measure: function (v) {
-        return 1;
+        if (v instanceof Node) {
+          return v.measure();
+        }
+        return measurer.measure(v);
       },
-      sum: function (a, b) {
-        return a + b;
-      }
+      sum: measurer.sum
     };
   } 
 
@@ -205,8 +204,8 @@
     if (right.length === 4) {
       return new Deep(measurer,
                       left,
-                      mid.addLast(new Node(measurer, [right[0], right[1], right[2]])),
-                      new Digit(measurer, [right[3], v]));
+                      mid.addLast(new Node(measurer, [right.get(0), right.get(1), right.get(2)])),
+                      new Digit(measurer, [right.get(3), v]));
     }
     return new Deep(measurer,
                     left,
@@ -291,6 +290,17 @@
   }
 
   function fromArray(xs, measurer) {
+    measurer = measurer || {
+      identity: function () {
+        return 0;
+      },
+      measure: function (v) {
+        return 1;
+      },
+      sum: function (a, b) {
+        return a + b;
+      }
+    };
     return prepend(new Empty(measurer), xs);
   }
 
