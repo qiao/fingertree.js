@@ -21,18 +21,13 @@
     this.items = items;
     this.length = items.length;
     this.measurer = measurer;
-  }
-
-  Digit.prototype.measure = function () {
-    var items = this.items;
-    var measurer = this.measurer;
 
     var m = measurer.identity();
-    for (var i = 0; i < items.length; ++i) {
+    for (var i = 0, len = items.length; i < len; ++i) {
       m = measurer.sum(m, measurer.measure(items[i]));
     }
-    return m;
-  };
+    this.measure = m;
+  }
 
   Digit.prototype.get = function (index) {
     return this.items[index];
@@ -50,24 +45,18 @@
     this.items = items;
      
     var m = measurer.identity();
-    for (var i = 0; i < items.length; ++i) {
+    for (var i = 0, len = items.length; i < len; ++i) {
       m = measurer.sum(m, measurer.measure(items[i]));
     }
-    this.memoizedMeasure = m;
+    this.measure = m;
   }
 
-  Node.prototype.measure = function () {
-    return this.memoizedMeasure;
-  };
-
   function FingerTree(measurer) {
-    this.measurer = {
+    this.measurer = measurer;
+    this.nodeMeasurer = {
       identity: measurer.identity,
-      measure: function (v) {
-        if (v instanceof Node) {
-          return v.measure();
-        }
-        return measurer.measure(v);
+      measure: function (n) {
+        return n.measure;
       },
       sum: measurer.sum
     };
@@ -77,14 +66,10 @@
 
   function Empty(measurer) {
     FingerTree.call(this, measurer);
-    this.memoizedMeasure = this.measurer.identity();
+    this.measure = this.measurer.identity();
   }
 
   Empty.prototype = create(FingerTree.prototype);
-
-  Empty.prototype.measure = function () {
-    return this.memoizedMeasure;
-  };
 
   Empty.prototype.addFirst = function (v) {
     return new Single(this.measurer, v);
@@ -115,29 +100,23 @@
   function Single(measurer, value) {
     FingerTree.call(this, measurer);
     this.value = value;
-    this.memoizedMeasure = this.measurer.measure(value);
+    this.measure = this.measurer.measure(value);
   }
 
   Single.prototype = create(FingerTree.prototype);
 
-  Single.prototype.measure = function () {
-    return this.memoizedMeasure;
-  };
-
   Single.prototype.addFirst = function (v) {
-    var measurer = this.measurer;
-    return new Deep(measurer,
-                    new Digit(measurer, [v]),
-                    new Empty(measurer),
-                    new Digit(measurer, [this.value]));
+    return new Deep(this.measurer,
+                    new Digit(this.measurer, [v]),
+                    new Empty(this.nodeMeasurer),
+                    new Digit(this.measurer, [this.value]));
   };
 
   Single.prototype.addLast = function (v) {
-    var measurer = this.measurer;
-    return new Deep(measurer,
-                    new Digit(measurer, [this.value]),
-                    new Empty(measurer),
-                    new Digit(measurer, [v]));
+    return new Deep(this.measurer,
+                    new Digit(this.measurer, [this.value]),
+                    new Empty(this.nodeMeasurer),
+                    new Digit(this.measurer, [v]));
   };
 
   Single.prototype.peekFirst = function () {
@@ -162,20 +141,13 @@
     this.left = left;
     this.mid = mid;
     this.right = right;
-    this.memoizedMeasure = null;
+    this.measure = this.measurer.sum(
+      this.measurer.sum(this.left.measure, this.mid.measure),
+      this.right.measure);
   }
 
   Deep.prototype = create(FingerTree.prototype);
 
-  Deep.prototype.measure = function () {
-    var measurer = this.measurer;
-    if (this.memoizedMeasure === null) {
-      this.memoizedMeasure = measurer.sum(
-        measurer.sum(this.left.measure(), this.mid.measure()),
-        this.right.measure());
-    }
-    return this.memoizedMeasure;
-  };
 
   Deep.prototype.addFirst = function (v) {
     var left = this.left;
