@@ -29,10 +29,6 @@
     this.measure = m;
   }
 
-  Digit.prototype.get = function (index) {
-    return this.items[index];
-  };
-
   Digit.prototype.first = function () {
     return this.items[0];
   };
@@ -53,13 +49,6 @@
 
   function FingerTree(measurer) {
     this.measurer = measurer;
-    this.nodeMeasurer = {
-      identity: measurer.identity,
-      measure: function (n) {
-        return n.measure;
-      },
-      sum: measurer.sum
-    };
   } 
 
   FingerTree.fromArray = fromArray;
@@ -106,17 +95,21 @@
   Single.prototype = create(FingerTree.prototype);
 
   Single.prototype.addFirst = function (v) {
-    return new Deep(this.measurer,
-                    new Digit(this.measurer, [v]),
-                    new Empty(this.nodeMeasurer),
-                    new Digit(this.measurer, [this.value]));
+    var measurer = this.measurer;
+
+    return new Deep(measurer,
+                    new Digit(measurer, [v]),
+                    new Empty(makeNodeMeasurer(measurer)),
+                    new Digit(measurer, [this.value]));
   };
 
   Single.prototype.addLast = function (v) {
-    return new Deep(this.measurer,
-                    new Digit(this.measurer, [this.value]),
-                    new Empty(this.nodeMeasurer),
-                    new Digit(this.measurer, [v]));
+    var measurer = this.measurer;
+
+    return new Deep(measurer,
+                    new Digit(measurer, [this.value]),
+                    new Empty(makeNodeMeasurer(measurer)),
+                    new Digit(measurer, [v]));
   };
 
   Single.prototype.peekFirst = function () {
@@ -154,15 +147,18 @@
     var mid = this.mid;
     var right = this.right;
     var measurer = this.measurer;
+    var leftItems = left.items;
 
     if (left.length === 4) {
       return new Deep(measurer,
-                      new Digit(measurer, [v, left.get(0)]),
-                      mid.addFirst(new Node(measurer, [left.get(1), left.get(2), left.get(3)])),
+                      new Digit(measurer, [v, leftItems[0]]),
+                      mid.addFirst(new Node(measurer, [leftItems[1],
+                                                       leftItems[2],
+                                                       leftItems[3]])),
                       right);
     }
     return new Deep(measurer,
-                    new Digit(measurer, [v].concat(left.items)),
+                    new Digit(measurer, [v].concat(leftItems)),
                     mid,
                     right);
   };
@@ -172,17 +168,20 @@
     var mid = this.mid;
     var right = this.right;
     var measurer = this.measurer;
+    var rightItems = right.items;
 
     if (right.length === 4) {
       return new Deep(measurer,
                       left,
-                      mid.addLast(new Node(measurer, [right.get(0), right.get(1), right.get(2)])),
-                      new Digit(measurer, [right.get(3), v]));
+                      mid.addLast(new Node(measurer, [rightItems[0],
+                                                      rightItems[1],
+                                                      rightItems[2]])),
+                      new Digit(measurer, [rightItems[3], v]));
     }
     return new Deep(measurer,
                     left,
                     mid,
-                    new Digit(measurer, right.items.concat([v])));
+                    new Digit(measurer, rightItems.concat([v])));
   };
 
   Deep.prototype.peekFirst = function () {
@@ -245,6 +244,16 @@
                                    new Node(m, [xs[6], xs[7]])]);
       default: throw new Error('invalid number of nodes');
     }
+  }
+
+  function makeNodeMeasurer(measurer) {
+    return {
+      identity: measurer.identity,
+      measure: function (n) {
+        return n.measure;
+      },
+      sum: measurer.sum
+    };
   }
 
   function prepend(tree, xs) {
