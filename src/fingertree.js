@@ -16,10 +16,17 @@
     F.prototype = o;
     return new F();
   };
+
+  function Split(left, mid, right) {
+    this.left = left;
+    this.mid = mid;
+    this.right = right;
+  }
   
   function Digit(measurer, items) {
     this.items = items;
     this.length = items.length;
+    this.measurer = measurer;
 
     var m = measurer.identity();
     for (var i = 0, len = items.length; i < len; ++i) {
@@ -28,12 +35,33 @@
     this.measure = m;
   }
 
-  Digit.prototype.first = function () {
+  Digit.prototype.peekFirst = function () {
     return this.items[0];
   };
 
-  Digit.prototype.last = function () {
+  Digit.prototype.peekLast = function () {
     return this.items[this.items.length - 1];
+  };
+
+  Digit.prototype.split = function (predicate, initial) {
+    var items = this.items;
+    var measurer = this.measurer;
+    var measure = initial;
+    var i, len = items.length;
+
+    if (len === 1) {
+      return new Split([], items[0], []);
+    }
+
+    for (i = 0, len = items.length; i < len; ++i) {
+      measure = measurer.sum(measure, items[i]);
+      if (predicate(measure)) {
+        break;
+      }
+    }
+    return new Split(items.slice(0, i),
+                     items[i],
+                     items.slice(i + 1));
   };
 
   function Node(measurer, items) {
@@ -45,6 +73,23 @@
     }
     this.measure = m;
   }
+
+  Node.prototype.split = function (predicate, initial) {
+    var items = this.items;
+    var measurer = this.measurer;
+    var measure = initial;
+    var i, len;
+
+    for (i = 0, len = items.length; i < len; ++i) {
+      measure = measurer.sum(measure, items[i]);
+      if (predicate(measure)) {
+        break;
+      }
+    }
+    return new Split(items.slice(0, i),
+                     items[i],
+                     items.slice(i + 1));
+  };
 
   function FingerTree(measurer) {
     this.measurer = measurer;
@@ -127,6 +172,12 @@
     return other.addFirst(this.value);
   };
 
+  Single.prototype.splitTree = function (predicate, initial) {
+    return new Split(new Empty(this.measurer),
+                     this.value,
+                     new Empty(this.measurer));
+  };
+
 
   function Deep(measurer, left, mid, right) {
     FingerTree.call(this, measurer);
@@ -139,7 +190,6 @@
   }
 
   Deep.prototype = create(FingerTree.prototype);
-
 
   Deep.prototype.addFirst = function (v) {
     var left = this.left;
@@ -184,11 +234,11 @@
   };
 
   Deep.prototype.peekFirst = function () {
-    return this.left.first();
+    return this.left.peekFirst();
   };
 
   Deep.prototype.peekLast = function () {
-    return this.right.last();
+    return this.right.peekLast();
   };
 
   Deep.prototype.isEmpty = function () {
@@ -204,6 +254,63 @@
     }
     return app3(this, [], other);
   };
+
+  Deep.prototype.splitTree = function (predicate, initial) {
+    var left = this.left;
+    var mid = this.mid;
+    var right = this.right;
+    var measurer = this.measurer;
+
+    var leftMeasure = measurer.sum(initial, left.measure);
+    if (predicate(leftMeasure)) {
+      var split = left.split(predicate, initial);
+      return new Split(fromArray(split.left),
+                       split.mid,
+                       deepLeft(measurer, split.right, mid, right));
+    }
+
+    var midMeasure = measurer.sum(leftMeasure, mid.measure);
+    if (predicate(midMeasure)) {
+      var midSplit = mid.splitTree(predicate, leftMeasure);
+      var split = midSplit.mid.split(predicate, measurer.sum(midMeasure, midSplit.left.measure));
+      return new Split(deepRight(measurer, left, midSplit.left, split.left),
+                       split.mid,
+                       deepLeft(measurer, split.right, midSplit.right, right));
+    }
+
+    var split = right.split(predicate, midMeasure);
+    return new Split(deepRight(measurer, left, mid, split.left),
+                     split.mid,
+                     fromArray(split.left));
+  };
+
+  function deepLeft(measurer, left, mid, right) {
+    if (!left.length) {
+      if (mid.isEmpty()) {
+        return fromArray(right.items, measurer);
+      }
+      // TODO: lazy evaluation
+      return new Deep(measurer,
+                      new Digit(measurer, [mid.peekFirst()]),
+                      mid.removeFirst(),
+                      right);
+    }
+    return new Deep(measurer, left, mid, right);
+  }
+
+  function deepRight(measurer, left, mid, right) {
+    if (!right.length) {
+      if (mid.isEmpty()) {
+        return fromArray(left.items, measurer);
+      }
+      // TODO: lazy evaluation
+      return new Deep(measurer,
+                      left,
+                      mid.removeLast(),
+                      new Digit(measurer, [mid.peekFirst()]));
+    }
+    return new Deep(measurer, left, mid, right);
+  }
 
   function app3(t1, ts, t2) {
     if (t1 instanceof Empty) {
