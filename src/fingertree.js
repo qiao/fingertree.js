@@ -20,7 +20,6 @@
   function Digit(measurer, items) {
     this.items = items;
     this.length = items.length;
-    this.measurer = measurer;
 
     var m = measurer.identity();
     for (var i = 0, len = items.length; i < len; ++i) {
