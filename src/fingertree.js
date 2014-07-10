@@ -1,3 +1,17 @@
+/**
+ * @fileoverview Implementation of Finger Tree, an immutable general-purpose
+ *   data structure which can further be used to implement random-access
+ *   sequences, priority-queues, ordered sequences, interval trees, etc.
+ *
+ *   Based on:
+ *   Ralf Hinze and Ross Paterson,
+ *   "Finger trees: a simple general-purpose data structure",
+ *   <http://www.soi.city.ac.uk/~ross/papers/FingerTree.html>
+ * @author Xueqiao Xu <xueqiaoxu@gmail.com>
+ */
+
+
+// universal module loader
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD
@@ -11,18 +25,44 @@
   }
 }(this, function () {
 
+  /**
+   * Polyfill for Object.create.
+   */
   var create = Object.create || function (o) {
     function F() {}
     F.prototype = o;
     return new F();
   };
 
+  /**
+   * Placeholder for methods of interfaces / abstract base classes.
+   */
+  function notImplemented() {
+    throw new Error('Not Implemented');
+  }
+
+  /**
+   * A split is a container which has 3 parts, in which the left part is the
+   * elements that do not satisfy the predicate, the middle part is the
+   * first element that satisfies the predicate and the last part is the rest
+   * elements.
+   * @constructor
+   * @param {Array|FingerTree} left
+   * @param {*} mid
+   * @param {Array|FingerTree} right
+   */
   function Split(left, mid, right) {
     this.left = left;
     this.mid = mid;
     this.right = right;
   }
   
+  /**
+   * A digit is a measured container of one to four elements.
+   * @constructor
+   * @param {function} measurer
+   * @param {Array.<*>} items
+   */
   function Digit(measurer, items) {
     this.items = items;
     this.length = items.length;
@@ -35,14 +75,32 @@
     this.measure = m;
   }
 
+  /**
+   * Get the first element stored in the digit.
+   * @return {*}
+   */
   Digit.prototype.peekFirst = function () {
     return this.items[0];
   };
 
+  /**
+   * Get the last element stored in the digit.
+   * @return {*}
+   */
   Digit.prototype.peekLast = function () {
     return this.items[this.items.length - 1];
   };
 
+  /**
+   * Split the digit into 3 parts, in which the left part is the elements
+   * that does not satisfy the predicate, the middle part is the first 
+   * element that satisfies the predicate and the last part is the rest
+   * elements.
+   * @param {Function} predicate A function which returns either true or false
+   *   given each stored element.
+   * @param {*} initial The initial measure for the predicate
+   * @return {Split}
+   */
   Digit.prototype.split = function (predicate, initial) {
     var items = this.items;
     var measurer = this.measurer;
@@ -64,6 +122,10 @@
                      items.slice(i + 1));
   };
 
+  /**
+   * A node is a measured container of either 2 or 3 sub-finger-trees.
+   * @constructor
+   */
   function Node(measurer, items) {
     this.items = items;
      
@@ -74,70 +136,142 @@
     this.measure = m;
   }
 
-  Node.prototype.split = function (predicate, initial) {
-    var items = this.items;
-    var measurer = this.measurer;
-    var measure = initial;
-    var i, len;
-
-    for (i = 0, len = items.length; i < len; ++i) {
-      measure = measurer.sum(measure, items[i]);
-      if (predicate(measure)) {
-        break;
-      }
-    }
-    return new Split(items.slice(0, i),
-                     items[i],
-                     items.slice(i + 1));
-  };
-
-  function FingerTree(measurer) {
-    this.measurer = measurer;
-  } 
+  /**
+   * Interface of finger-tree.
+   * @interface
+   */
+  function FingerTree() { } 
 
   FingerTree.fromArray = fromArray;
 
+  /**
+   * Check whether the tree is empty.
+   * @return {boolean} True if the tree is empty.
+   */
+  FingerTree.prototype.isEmpty = notImplemented;
+
+  /**
+   * Add an element to the front of the tree.
+   * @param {*} v The element to add.
+   * @return {FingerTree} A new finger-tree with the element added.
+   */
+  FingerTree.prototype.addFirst = notImplemented;
+
+  /**
+   * Add an element to the end of the tree.
+   * @param {*} v The element to add.
+   * @return {FingerTree} A new finger-tree with the element added.
+   */
+  FingerTree.prototype.addLast = notImplemented;
+
+  /**
+   * Get the first element of the tree.
+   * @return {*}
+   */
+  FingerTree.prototype.peekFirst = notImplemented;
+
+  /**
+   * Get the last element of the tree.
+   * @return {*}
+   */
+  FingerTree.prototype.peekLast = notImplemented;
+
+  /**
+   * Concatenate this tree with another tree.
+   * @param {FingerTree} other
+   * @return {FingerTree} The concatenated tree.
+   */
+  FingerTree.prototype.concat = notImplemented;
+
+  /**
+   * Split the tree into two halves, where the first half is a finger-tree
+   * which contains all the elements that satisfy the given predicate,
+   * while the ones from the other half do not.
+   * @param {function(*): boolean} predicate
+   * @return {Array.<FingerTree>} An array with the first element being a
+   *   finger-tree that contains all the satisfying elements and the second
+   *   element being a finger-tree that contains all the other elements.
+   */
+  FingerTree.prototype.split = notImplemented;
+
+  /**
+   * An empty finger-tree.
+   * @constructor
+   * @implements {FingerTree}
+   */
   function Empty(measurer) {
-    FingerTree.call(this, measurer);
-    this.measure = this.measurer.identity();
+    this.measurer = measurer;
+    this.measure = measurer.identity();
   }
 
   Empty.prototype = create(FingerTree.prototype);
 
+  /**
+   * @inheritDoc
+   */
   Empty.prototype.addFirst = function (v) {
     return new Single(this.measurer, v);
   };
 
+  /**
+   * @inheritDoc
+   */
   Empty.prototype.addLast = function (v) {
     return new Single(this.measurer, v);
   };
 
+  /**
+   * @inheritDoc
+   */
   Empty.prototype.peekFirst = function () {
     return null;
   };
 
+  /**
+   * @inheritDoc
+   */
   Empty.prototype.peekLast = function () {
     return null;
   };
 
+  /**
+   * @inheritDoc
+   */
   Empty.prototype.isEmpty = function () {
     return true;
   };
 
+  /**
+   * @inheritDoc
+   */
   Empty.prototype.concat = function (other) {
     return other;
   };
 
+  /**
+   * @inheritDoc
+   */
+  Empty.prototype.split = function (predicate) {
+    return [this, this];
+  };
 
 
+  /**
+   * A finger-tree which contains exactly one element.
+   * @constructor
+   * @implements {FingerTree}
+   */
   function Single(measurer, value) {
-    FingerTree.call(this, measurer);
     this.value = value;
-    this.measure = this.measurer.measure(value);
+    this.measurer = measurer;
+    this.measure = measurer.measure(value);
   }
 
   Single.prototype = create(FingerTree.prototype);
 
+  /**
+   * @inheritDoc
+   */
   Single.prototype.addFirst = function (v) {
     var measurer = this.measurer;
 
@@ -147,6 +281,9 @@
                     new Digit(measurer, [this.value]));
   };
 
+  /**
+   * @inheritDoc
+   */
   Single.prototype.addLast = function (v) {
     var measurer = this.measurer;
 
@@ -156,41 +293,91 @@
                     new Digit(measurer, [v]));
   };
 
+  /**
+   * @inheritDoc
+   */
   Single.prototype.peekFirst = function () {
     return this.value;
   };
 
+  /**
+   * @inheritDoc
+   */
   Single.prototype.peekLast = function () {
     return this.value;
   };
 
+  /**
+   * @inheritDoc
+   */
   Single.prototype.isEmpty = function () {
     return false;
   };
 
+  /**
+   * @inheritDoc
+   */
   Single.prototype.concat = function (other) {
     return other.addFirst(this.value);
   };
 
+  /**
+   * Helper function to split the tree into 3 parts.
+   * @private
+   * @param {function(*): boolean} predicate
+   * @param {*} initial The initial measurement for reducing
+   * @return {Split}
+   */
   Single.prototype.splitTree = function (predicate, initial) {
     return new Split(new Empty(this.measurer),
                      this.value,
                      new Empty(this.measurer));
   };
 
+  /**
+   * @inheritDoc
+   */
+  Single.prototype.split = function (predicate) {
+    if (predicate(this.measure)) {
+      return [this, new Empty(this.measurer)];
+    }
+    return [new Empty(this.measurer), this];
+  };
 
+
+  /**
+   * A finger-tree which contains two or more elements.
+   * @constructor
+   * @implements FingerTree
+   */
   function Deep(measurer, left, mid, right) {
-    FingerTree.call(this, measurer);
+    /**
+     * @type {Digit}
+     */
     this.left = left;
+
+    /**
+     * @type {FingerTree}
+     */
     this.mid = mid;
+
+    /**
+     * @type {Digit}
+     */
     this.right = right;
-    this.measure = this.measurer.sum(
-      this.measurer.sum(this.left.measure, this.mid.measure),
+
+    this.measurer = measurer;
+
+    this.measure = measurer.sum(
+      measurer.sum(this.left.measure, this.mid.measure),
       this.right.measure);
   }
 
   Deep.prototype = create(FingerTree.prototype);
 
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.addFirst = function (v) {
     var left = this.left;
     var mid = this.mid;
@@ -212,6 +399,9 @@
                     right);
   };
 
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.addLast = function (v) {
     var left = this.left;
     var mid = this.mid;
@@ -233,18 +423,30 @@
                     new Digit(measurer, rightItems.concat([v])));
   };
 
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.peekFirst = function () {
     return this.left.peekFirst();
   };
 
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.peekLast = function () {
     return this.right.peekLast();
   };
 
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.isEmpty = function () {
     return false;
   };
 
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.concat = function (other) {
     if (other instanceof Empty) {
       return this;
@@ -255,6 +457,13 @@
     return app3(this, [], other);
   };
 
+  /**
+   * Helper function to split the tree into 3 parts.
+   * @private
+   * @param {function(*): boolean} predicate
+   * @param {*} initial The initial measurement for reducing
+   * @return {Split}
+   */
   Deep.prototype.splitTree = function (predicate, initial) {
     var left = this.left;
     var mid = this.mid;
@@ -282,6 +491,17 @@
     return new Split(deepRight(measurer, left, mid, split.left),
                      split.mid,
                      fromArray(split.left));
+  };
+
+  /**
+   * @inheritDoc
+   */
+  Deep.prototype.split = function (predicate) {
+    if (predicate(this.measure)) {
+      var split = this.splitTree(predicate, this.measurer.identity());
+      return [split.left, split.right.addFirst(split.mid)];
+    }
+    return [this, new Empty(this.measurer)];
   };
 
   function deepLeft(measurer, left, mid, right) {
