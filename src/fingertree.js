@@ -186,14 +186,14 @@
   FingerTree.prototype.isEmpty = notImplemented;
 
   /**
-   * Add an element to the front of the tree.
+   * Return a new tree with an element added to the front.
    * @param {*} v The element to add.
-   * @return {FingerTree} A new finger-tree with the element added.
+   * @return {FingerTree}
    */
   FingerTree.prototype.addFirst = notImplemented;
 
   /**
-   * Add an element to the end of the tree.
+   * Return a new tree with an element added to the end.
    * @param {*} v The element to add.
    * @return {FingerTree} A new finger-tree with the element added.
    */
