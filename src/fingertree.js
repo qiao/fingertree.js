@@ -25,6 +25,8 @@
   }
 }(this, function () {
 
+  'use strict';
+
   /**
    * Polyfill for Object.create.
    */
@@ -112,7 +114,7 @@
     }
 
     for (i = 0, len = items.length; i < len; ++i) {
-      measure = measurer.sum(measure, items[i]);
+      measure = measurer.sum(measure, measurer.measure(items[i]));
       if (predicate(measure)) {
         break;
       }
@@ -120,6 +122,18 @@
     return new Split(items.slice(0, i),
                      items[i],
                      items.slice(i + 1));
+  };
+
+  /**
+   * Return the JSON representation of the digit.
+   * @return {Object}
+   */
+  Digit.prototype.toJSON = function () {
+    return {
+      type: 'digit',
+      items: this.items,
+      measure: this.measure
+    };
   };
 
   /**
@@ -134,7 +148,28 @@
       m = measurer.sum(m, measurer.measure(items[i]));
     }
     this.measure = m;
+    this.measurer = measurer;
   }
+
+  /**
+   * Convert the node to a digit.
+   * @return {Node}
+   */
+  Node.prototype.toDigit = function () {
+    return new Digit(this.measurer, this.items);
+  };
+
+  /**
+   * Return the JSON representation of the node.
+   * @return {Object}
+   */
+  Node.prototype.toJSON = function () {
+    return {
+      type: 'node',
+      items: this.items,
+      measure: this.measure
+    };
+  };
 
   /**
    * Interface of finger-tree.
@@ -195,6 +230,13 @@
   FingerTree.prototype.split = notImplemented;
 
   /**
+   * Return the JSON representation of the tree.
+   * @return {Object}
+   */
+  FingerTree.prototype.toJSON = notImplemented;
+
+
+  /**
    * An empty finger-tree.
    * @constructor
    * @implements {FingerTree}
@@ -253,6 +295,16 @@
    */
   Empty.prototype.split = function (predicate) {
     return [this, this];
+  };
+
+  /**
+   * @inheritDoc
+   */
+  Empty.prototype.toJSON = function () {
+    return {
+      type: 'empty',
+      measure: this.measure
+    };
   };
 
 
@@ -342,6 +394,17 @@
       return [this, new Empty(this.measurer)];
     }
     return [new Empty(this.measurer), this];
+  };
+
+  /**
+   * @inheritDoc
+   */
+  Single.prototype.toJSON = function () {
+    return {
+      type: 'single',
+      value: this.value,
+      measure: this.measure
+    };
   };
 
 
@@ -481,7 +544,7 @@
     var midMeasure = measurer.sum(leftMeasure, mid.measure);
     if (predicate(midMeasure)) {
       var midSplit = mid.splitTree(predicate, leftMeasure);
-      var split = midSplit.mid.split(predicate, measurer.sum(midMeasure, midSplit.left.measure));
+      var split = midSplit.mid.toDigit().split(predicate, measurer.sum(leftMeasure, midSplit.left.measure));
       return new Split(deepRight(measurer, left, midSplit.left, split.left),
                        split.mid,
                        deepLeft(measurer, split.right, midSplit.right, right));
@@ -492,6 +555,10 @@
                      split.mid,
                      fromArray(split.left));
   };
+
+  function pprint(x) {
+    console.log(JSON.stringify(x, null, 4));
+  }
 
   /**
    * @inheritDoc
@@ -504,6 +571,24 @@
     return [this, new Empty(this.measurer)];
   };
 
+  /**
+   * @inheritDoc
+   */
+  Deep.prototype.toJSON = function () {
+    return {
+      type: 'deep',
+      left: this.left,
+      mid: this.mid,
+      right: this.right,
+      measure: this.measure
+    };
+  };
+
+  /**
+   * @param {Array} left
+   * @param {FingerTree} mid
+   * @param {Digit} right
+   */
   function deepLeft(measurer, left, mid, right) {
     if (!left.length) {
       if (mid.isEmpty()) {
@@ -515,9 +600,14 @@
                       mid.removeFirst(),
                       right);
     }
-    return new Deep(measurer, left, mid, right);
+    return new Deep(measurer, new Digit(measurer, left), mid, right);
   }
 
+  /**
+   * @param {Digit} left
+   * @param {FingerTree} mid
+   * @param {Array} right
+   */
   function deepRight(measurer, left, mid, right) {
     if (!right.length) {
       if (mid.isEmpty()) {
@@ -529,9 +619,17 @@
                       mid.removeLast(),
                       new Digit(measurer, [mid.peekFirst()]));
     }
-    return new Deep(measurer, left, mid, right);
+    return new Deep(measurer, left, mid, new Digit(measurer, right));
   }
 
+  /**
+   * Helper function to concatenate two finger-trees with additional elements
+   * in between.
+   * @param {FingerTree} t1 Left finger-tree
+   * @param {Array} ts An array of elements in between the two finger-trees
+   * @param {FingerTree} t2 Right finger-tree
+   * @return {FingerTree}
+   */
   function app3(t1, ts, t2) {
     if (t1 instanceof Empty) {
       return prepend(t2, ts);
@@ -548,30 +646,42 @@
     return new Deep(t1.measurer,
                     t1.left,
                     app3(t1.mid,
-                         nodes(t1.measurer, t1.right.itemsconcat(ts).concat(t2.left.items)),
+                         nodes(t1.measurer, t1.right.items.concat(ts).concat(t2.left.items)),
                          t2.mid),
                     t2.right);
   }
 
+  /**
+   * Helper function to group an array of elements into an array of nodes.
+   * @param {Object.<string, function>} m Measurer 
+   * @param {Array} xs
+   * @return {Array}
+   */
   function nodes(m, xs) {
     switch (xs.length) {
-      case 2: return new Digit(m, [new Node(m, xs)]);
-      case 3: return new Digit(m, [new Node(m, xs)]);
-      case 4: return new Digit(m, [new Node(m, [xs[0], xs[1]]),
-                                   new Node(m, [xs[2], xs[3]])]);
-      case 5: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
-                                   new Node(m, [xs[3], xs[4]])]);
-      case 6: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
-                                   new Node(m, [xs[3], xs[4], xs[5]])]);
-      case 7: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
-                                   new Node(m, [xs[3], xs[4], xs[5]])]);
-      case 8: return new Digit(m, [new Node(m, [xs[0], xs[1], xs[2]]),
-                                   new Node(m, [xs[3], xs[4], xs[5]]),
-                                   new Node(m, [xs[6], xs[7]])]);
+      case 2: return [new Node(m, xs)];
+      case 3: return [new Node(m, xs)];
+      case 4: return [new Node(m, [xs[0], xs[1]]),
+                      new Node(m, [xs[2], xs[3]])];
+      case 5: return [new Node(m, [xs[0], xs[1], xs[2]]),
+                      new Node(m, [xs[3], xs[4]])];
+      case 6: return [new Node(m, [xs[0], xs[1], xs[2]]),
+                      new Node(m, [xs[3], xs[4], xs[5]])];
+      case 7: return [new Node(m, [xs[0], xs[1], xs[2]]),
+                      new Node(m, [xs[3], xs[4], xs[5]])];
+      case 8: return [new Node(m, [xs[0], xs[1], xs[2]]),
+                      new Node(m, [xs[3], xs[4], xs[5]]),
+                      new Node(m, [xs[6], xs[7]])];
       default: throw new Error('invalid number of nodes');
     }
   }
 
+  /**
+   * Construct a derived measurer which will return the memoized
+   * measurement of a node instead of evaluting the node.
+   * @param {Object.<string, function>} measurer
+   * @return {Object.<string, function>}
+   */
   function makeNodeMeasurer(measurer) {
     return {
       identity: measurer.identity,
@@ -582,6 +692,13 @@
     };
   }
 
+  /**
+   * Prepend an array of elements to the left of a tree.
+   * Returns a new tree with the original one unmodified.
+   * @param {FingerTree} tree
+   * @param {Array} xs
+   * @return {FingerTree}
+   */
   function prepend(tree, xs) {
     for (var i = xs.length - 1; i >= 0; --i) {
       tree = tree.addFirst(xs[i]);
@@ -589,6 +706,13 @@
     return tree;
   }
 
+  /**
+   * Append an array of elements to the right of a tree.
+   * Returns a new tree with the original one unmodified.
+   * @param {FingerTree} tree
+   * @param {Array} xs
+   * @return {FingerTree}
+   */
   function append(tree, xs) {
     for (var i = 0, len = xs.length; i < len; ++i) {
       tree = tree.addLast(xs[i]);
@@ -596,6 +720,12 @@
     return tree;
   }
 
+  /**
+   * Construct a fingertree from an array.
+   * @param {Array} xs An array of elements.
+   * @param {Object.<string, function>} measurer
+   * @return {FingerTree}
+   */
   function fromArray(xs, measurer) {
     measurer = measurer || {
       identity: function () {
