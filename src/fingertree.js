@@ -200,6 +200,18 @@
   FingerTree.prototype.addLast = notImplemented;
 
   /**
+   * Return a new tree with the first element removed.
+   * @return {FingerTree}
+   */
+  FingerTree.prototype.removeFirst = notImplemented;
+
+  /**
+   * Return a new tree with the last element removed.
+   * @return {FingerTree}
+   */
+  FingerTree.prototype.removeLast = notImplemented;
+
+  /**
    * Get the first element of the tree.
    * @return {*}
    */
