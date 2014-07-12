@@ -580,7 +580,7 @@
     if (left.length === 1) {
       return new Single(measurer, left.items[0]);
     }
-    return new Deep(measurer, right.left(0, -1), mid, left.slice(-1));
+    return new Deep(measurer, left.slice(0, -1), mid, left.slice(-1));
   };
 
   /**
