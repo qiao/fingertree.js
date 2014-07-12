@@ -13,7 +13,7 @@ test:
 			test
 
 test-cov: src-cov
-	@R7RS_COV=1 $(MAKE) test TEST_REPORTER=html-cov > coverage.html
+	@TEST_COV=1 $(MAKE) test TEST_REPORTER=html-cov > coverage.html
 
 src-cov: clean
 	@jscoverage src src-cov
