@@ -1,5 +1,7 @@
 # FingerTree.js
 
+[![Build Status](https://travis-ci.org/qiao/fingertree.js.svg?branch=master)](https://travis-ci.org/qiao/fingertree.js)
+
 Implementation of Finger Tree, an immutable general-purpose
 data structure which can further be used to implement random-access
 sequences, priority-queues, ordered sequences, interval trees, etc.
