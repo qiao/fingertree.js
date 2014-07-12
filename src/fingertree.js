@@ -94,6 +94,35 @@
   };
 
   /**
+   * Return a new digit with the first item removed.
+   * @return {Digit}
+   */
+  Digit.prototype.removeFirst = function () {
+    return this.slice(1);
+  };
+
+  /**
+   * Return a new digit with the first item removed.
+   * @return {Digit}
+   */
+  Digit.prototype.removeLast = function () {
+    return this.slice(0, this.length - 1);
+  };
+
+  /**
+   * Return a new digit with the items sliced.
+   * @param {Number} start
+   * @param {Number} end
+   * @return {Digit}
+   */
+  Digit.prototype.slice = function (start, end) {
+    if (end === undefined) {
+      end = this.length;
+    }
+    return new Digit(this.measurer, this.items.slice(start, end));
+  };
+
+  /**
    * Split the digit into 3 parts, in which the left part is the elements
    * that does not satisfy the predicate, the middle part is the first 
    * element that satisfies the predicate and the last part is the rest
@@ -360,6 +389,20 @@
   /**
    * @inheritDoc
    */
+  Single.prototype.removeFirst = function () {
+    return new Empty(this.measurer);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  Single.prototype.removeLast = function () {
+    return new Empty(this.measurer);
+  };
+
+  /**
+   * @inheritDoc
+   */
   Single.prototype.peekFirst = function () {
     return this.value;
   };
@@ -501,6 +544,48 @@
   /**
    * @inheritDoc
    */
+  Deep.prototype.removeFirst = function () {
+    var left = this.left;
+    var mid = this.mid;
+    var right = this.right;
+    var measurer = this.measurer;
+
+    if (left.length > 1) {
+      return new Deep(measurer, left.removeFirst(), mid, right);
+    }
+    if (!mid.isEmpty()) {
+      return new Deep(measurer, mid.peekFirst().toDigit(), mid.removeFirst(), right);
+    }
+    if (right.length === 1) {
+      return new Single(measurer, right.items[0]);
+    }
+    return new Deep(measurer, right.slice(0, 1), mid, right.slice(1));
+  };
+
+  /**
+   * @inheritDoc
+   */
+  Deep.prototype.removeLast = function () {
+    var left = this.left;
+    var mid = this.mid;
+    var right = this.right;
+    var measurer = this.measurer;
+
+    if (right.length > 1) {
+      return new Deep(measurer, left, mid, right.removeLast());
+    }
+    if (!mid.isEmpty()) {
+      return new Deep(measurer, left, mid.removeLast(), mid.peekLast().toDigit());
+    }
+    if (left.length === 1) {
+      return new Single(measurer, left.items[0]);
+    }
+    return new Deep(measurer, right.left(0, -1), mid, left.slice(-1));
+  };
+
+  /**
+   * @inheritDoc
+   */
   Deep.prototype.peekFirst = function () {
     return this.left.peekFirst();
   };
@@ -545,14 +630,16 @@
     var right = this.right;
     var measurer = this.measurer;
 
+    // see if the split point is inside the left tree
     var leftMeasure = measurer.sum(initial, left.measure);
     if (predicate(leftMeasure)) {
       var split = left.split(predicate, initial);
-      return new Split(fromArray(split.left),
+      return new Split(fromArray(split.left, measurer),
                        split.mid,
                        deepLeft(measurer, split.right, mid, right));
     }
 
+    // see if the split point is inside the mid tree
     var midMeasure = measurer.sum(leftMeasure, mid.measure);
     if (predicate(midMeasure)) {
       var midSplit = mid.splitTree(predicate, leftMeasure);
@@ -562,15 +649,12 @@
                        deepLeft(measurer, split.right, midSplit.right, right));
     }
 
+    // the split point is in the right tree
     var split = right.split(predicate, midMeasure);
     return new Split(deepRight(measurer, left, mid, split.left),
                      split.mid,
-                     fromArray(split.left));
+                     fromArray(split.left, measurer));
   };
-
-  function pprint(x) {
-    console.log(JSON.stringify(x, null, 4));
-  }
 
   /**
    * @inheritDoc
@@ -608,7 +692,7 @@
       }
       // TODO: lazy evaluation
       return new Deep(measurer,
-                      new Digit(measurer, [mid.peekFirst()]),
+                      mid.peekFirst().toDigit(),
                       mid.removeFirst(),
                       right);
     }
@@ -629,7 +713,7 @@
       return new Deep(measurer,
                       left,
                       mid.removeLast(),
-                      new Digit(measurer, [mid.peekFirst()]));
+                      mid.peekLast().toDigit());
     }
     return new Deep(measurer, left, mid, new Digit(measurer, right));
   }
