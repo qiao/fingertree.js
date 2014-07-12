@@ -102,7 +102,7 @@ describe('Finger Tree', function () {
         return Math.max(a, b);
       }
     };
-    var tree = FingerTree.fromArray([1, 2, 3], measurer);
-    tree.measure.should.eql(3);
+    var tree = FingerTree.fromArray([1, 4, 3, 5, 2, 9], measurer);
+    tree.measure.should.eql(9);
   });
 });
