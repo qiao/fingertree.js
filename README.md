@@ -66,7 +66,7 @@ split[0].measure; // 3
 split[1].measure; // 1
 
 
-// Create a finger-tree with an custom measurer.
+// Create a finger-tree with a custom measurer.
 var measurer = {
   identity: function () {
     return -Infinity;
