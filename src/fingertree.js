@@ -613,7 +613,10 @@
       return new Deep(measurer, left.removeFirst(), mid, right);
     }
     if (!mid.isEmpty()) {
-      return new Deep(measurer, mid.peekFirst().toDigit(), mid.removeFirst(), right);
+      var newMid = new DelayedFingerTree(function () {
+        return mid.removeFirst();
+      });
+      return new Deep(measurer, mid.peekFirst().toDigit(), newMid, right);
     }
     if (right.length === 1) {
       return new Single(measurer, right.items[0]);
@@ -634,7 +637,10 @@
       return new Deep(measurer, left, mid, right.removeLast());
     }
     if (!mid.isEmpty()) {
-      return new Deep(measurer, left, mid.removeLast(), mid.peekLast().toDigit());
+      var newMid = new DelayedFingerTree(function () {
+        return mid.removeLast();
+      });
+      return new Deep(measurer, left, newMid, mid.peekLast().toDigit());
     }
     if (left.length === 1) {
       return new Single(measurer, left.items[0]);
@@ -739,6 +745,101 @@
     };
   };
 
+
+  /**
+   * A lazy-evaluted finger-tree.
+   * @constructor
+   * @implements {FingerTree}
+   * @param {function(): FingerTree} thunk A function, which when called, will
+   *   return a finger-tree instance.
+   */
+  function DelayedFingerTree(thunk) {
+    this.tree = null;
+    this.thunk = thunk;
+  }
+
+  /**
+   * Evaluate the thunk and return the finger-tree.
+   * @return {FingerTree}
+   */
+  DelayedFingerTree.prototype.force = function () {
+    if (this.tree === null) {
+      this.tree = this.thunk();
+    }
+    return this.tree;
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.isEmpty = function (v) {
+    return this.force().isEmpty();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.measure = function () {
+    return this.force().measure();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.peekFirst = function () {
+    return this.force().peekFirst();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.peekLast = function () {
+    return this.force().peekLast();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.addFirst = function (v) {
+    return this.force().addFirst(v);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.addLast = function (v) {
+    return this.force().addLast(v);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.removeFirst = function () {
+    return this.force().removeFirst();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.removeLast = function () {
+    return this.force().removeLast();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.split = function (predicate) {
+    return this.force().split(predicate);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.toJSON = function () {
+    return this.force().toJSON();
+  };
+
+
   /**
    * @param {Array} left
    * @param {FingerTree} mid
@@ -749,11 +850,12 @@
       if (mid.isEmpty()) {
         return fromArray(right.items, measurer);
       }
-      // TODO: lazy evaluation
-      return new Deep(measurer,
-                      mid.peekFirst().toDigit(),
-                      mid.removeFirst(),
-                      right);
+      return new DelayedFingerTree(function () {
+        return new Deep(measurer,
+                        mid.peekFirst().toDigit(),
+                        mid.removeFirst(),
+                        right);
+      });
     }
     return new Deep(measurer, new Digit(measurer, left), mid, right);
   }
@@ -768,11 +870,12 @@
       if (mid.isEmpty()) {
         return fromArray(left.items, measurer);
       }
-      // TODO: lazy evaluation
-      return new Deep(measurer,
-                      left,
-                      mid.removeLast(),
-                      mid.peekLast().toDigit());
+      return new DelayedFingerTree(function () {
+        return new Deep(measurer,
+                        left,
+                        mid.removeLast(),
+                        mid.peekLast().toDigit());
+      });
     }
     return new Deep(measurer, left, mid, new Digit(measurer, right));
   }
@@ -800,9 +903,14 @@
     }
     return new Deep(t1.measurer,
                     t1.left,
-                    app3(t1.mid,
-                         nodes(t1.measurer, t1.right.items.concat(ts).concat(t2.left.items)),
-                         t2.mid),
+                    new DelayedFingerTree(function () {
+                      return app3(t1.mid,
+                                  nodes(t1.measurer, 
+                                        t1.right.items
+                                          .concat(ts)
+                                          .concat(t2.left.items)),
+                                  t2.mid);
+                      }),
                     t2.right);
   }
 
