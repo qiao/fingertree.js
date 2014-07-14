@@ -74,8 +74,20 @@
     for (var i = 0, len = items.length; i < len; ++i) {
       m = measurer.sum(m, measurer.measure(items[i]));
     }
-    this.measure = m;
+
+    /**
+     * @private
+     */
+    this.measure_ = m;
   }
+
+  /**
+   * Get the measure of the digit.
+   * @return {*}
+   */
+  Digit.prototype.measure = function () {
+    return this.measure_;
+  };
 
   /**
    * Get the first element stored in the digit.
@@ -171,14 +183,26 @@
    */
   function Node(measurer, items) {
     this.items = items;
-     
+    this.measurer = measurer;
+
     var m = measurer.identity();
     for (var i = 0, len = items.length; i < len; ++i) {
       m = measurer.sum(m, measurer.measure(items[i]));
     }
-    this.measure = m;
-    this.measurer = measurer;
+
+    /**
+     * @private
+     */
+    this.measure_ = m;
   }
+
+  /**
+   * Get the measure of the node.
+   * @return {*}
+   */
+  Node.prototype.measure = function () {
+    return this.measure_;
+  };
 
   /**
    * Convert the node to a digit.
@@ -207,6 +231,12 @@
   function FingerTree() { } 
 
   FingerTree.fromArray = fromArray;
+
+  /**
+   * Get the measure of the tree.
+   * @return {*}
+   */
+  FingerTree.prototype.measure = notImplemented;
 
   /**
    * Check whether the tree is empty.
@@ -284,10 +314,18 @@
    */
   function Empty(measurer) {
     this.measurer = measurer;
-    this.measure = measurer.identity();
+    this.measure_ = measurer.identity();
   }
 
   Empty.prototype = create(FingerTree.prototype);
+
+  /**
+   * @inheritDoc
+   */
+  Empty.prototype.measure = function () {
+    return this.measure_;
+  };
+
 
   /**
    * @inheritDoc
@@ -357,10 +395,17 @@
   function Single(measurer, value) {
     this.value = value;
     this.measurer = measurer;
-    this.measure = measurer.measure(value);
+    this.measure_ = measurer.measure(value);
   }
 
   Single.prototype = create(FingerTree.prototype);
+
+  /**
+   * @inheritDoc
+   */
+  Single.prototype.measure = function () {
+    return this.measure_;
+  };
 
   /**
    * @inheritDoc
@@ -466,7 +511,7 @@
   /**
    * A finger-tree which contains two or more elements.
    * @constructor
-   * @implements FingerTree
+   * @implements {FingerTree}
    */
   function Deep(measurer, left, mid, right) {
     /**
@@ -486,12 +531,26 @@
 
     this.measurer = measurer;
 
-    this.measure = measurer.sum(
-      measurer.sum(this.left.measure, this.mid.measure),
-      this.right.measure);
+    /**
+     * @private
+     */
+    this.measure_ = null;
   }
 
   Deep.prototype = create(FingerTree.prototype);
+
+  /**
+   * @inheritDoc
+   */
+  Deep.prototype.measure = function () {
+    if (this.measure_ === null) {
+      var measurer = this.measurer;
+      this.measure_ = measurer.sum(
+        measurer.sum(this.left.measure(), this.mid.measure()),
+        this.right.measure());
+    }
+    return this.measure_;
+  };
 
   /**
    * @inheritDoc
@@ -631,7 +690,7 @@
     var measurer = this.measurer;
 
     // see if the split point is inside the left tree
-    var leftMeasure = measurer.sum(initial, left.measure);
+    var leftMeasure = measurer.sum(initial, left.measure());
     if (predicate(leftMeasure)) {
       var split = left.split(predicate, initial);
       return new Split(fromArray(split.left, measurer),
@@ -640,10 +699,10 @@
     }
 
     // see if the split point is inside the mid tree
-    var midMeasure = measurer.sum(leftMeasure, mid.measure);
+    var midMeasure = measurer.sum(leftMeasure, mid.measure());
     if (predicate(midMeasure)) {
       var midSplit = mid.splitTree(predicate, leftMeasure);
-      var split = midSplit.mid.toDigit().split(predicate, measurer.sum(leftMeasure, midSplit.left.measure));
+      var split = midSplit.mid.toDigit().split(predicate, measurer.sum(leftMeasure, midSplit.left.measure()));
       return new Split(deepRight(measurer, left, midSplit.left, split.left),
                        split.mid,
                        deepLeft(measurer, split.right, midSplit.right, right));
@@ -660,7 +719,7 @@
    * @inheritDoc
    */
   Deep.prototype.split = function (predicate) {
-    if (predicate(this.measure)) {
+    if (predicate(this.measure())) {
       var split = this.splitTree(predicate, this.measurer.identity());
       return [split.left, split.right.addFirst(split.mid)];
     }
@@ -782,7 +841,7 @@
     return {
       identity: measurer.identity,
       measure: function (n) {
-        return n.measure;
+        return n.measure();
       },
       sum: measurer.sum
     };
