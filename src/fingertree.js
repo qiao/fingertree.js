@@ -173,7 +173,7 @@
     return {
       type: 'digit',
       items: this.items,
-      measure: this.measure
+      measure: this.measure()
     };
   };
 
@@ -220,7 +220,7 @@
     return {
       type: 'node',
       items: this.items,
-      measure: this.measure
+      measure: this.measure()
     };
   };
 
