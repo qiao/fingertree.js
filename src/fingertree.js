@@ -739,6 +739,93 @@
     };
   };
 
+
+  /**
+   * A lazy-evaluted finger-tree.
+   * @constructor
+   * @implements {FingerTree}
+   * @param {function(): FingerTree} thunk A thunk, which when called, will
+   *   return a finger-tree instance.
+   */
+  function DelayedFingerTree(thunk) {
+    this.tree = null;
+    this.thunk = thunk;
+  }
+
+  /**
+   * Evaluate the thunk and return the finger-tree.
+   * @return {FingerTree}
+   */
+  DelayedFingerTree.prototype.force = function () {
+    if (this.tree === null) {
+      this.tree = this.thunk();
+    }
+    return this.tree;
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.isEmpty = function (v) {
+    return this.force().isEmpty();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.measure = function () {
+    return this.force().measure();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.peekFirst = function () {
+    return this.force().peekFirst();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.peekLast = function () {
+    return this.force().peekLast();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.addFirst = function (v) {
+    return this.force().addFirst(v);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.addLast = function (v) {
+    return this.force().addLast(v);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.removeFirst = function () {
+    return this.force().removeFirst();
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.split = function (predicate) {
+    return this.force().split(predicate);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.removeLast = function () {
+    return this.force().removeLast();
+  };
+
   /**
    * @param {Array} left
    * @param {FingerTree} mid
