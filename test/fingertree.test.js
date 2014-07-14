@@ -186,4 +186,81 @@ describe('Finger Tree', function () {
     var tree = FingerTree.fromArray([1, 4, 3, 5, 2, 9], measurer);
     tree.measure().should.eql(9);
   });
+
+  it('should be able to be serialized into JSON', function () {
+    var tree = FingerTree.fromArray([]);
+    JSON.parse(JSON.stringify(tree)).should.eql({
+      type: 'empty',
+      measure: 0
+    });
+
+    tree = FingerTree.fromArray([1]);
+    JSON.parse(JSON.stringify(tree)).should.eql({
+      type: 'single',
+      value: 1,
+      measure: 1
+    });
+
+    tree = FingerTree.fromArray([1, 2, 3]);
+    JSON.parse(JSON.stringify(tree)).should.eql({
+      type: 'deep',
+      left: {
+        type: 'digit',
+        items: [1, 2],
+        measure: 2
+      },
+      mid: {
+        type: 'empty',
+        measure: 0
+      },
+      right: {
+        type: 'digit',
+        items: [3],
+        measure: 1
+      },
+      measure: 3
+    });
+
+    tree = FingerTree.fromArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    JSON.parse(JSON.stringify(tree)).should.eql({
+      type: 'deep',
+      left: {
+        type: 'digit',
+        items: [1, 2],
+        measure: 2
+      },
+      mid: {
+        type: 'deep',
+        left: {
+          type: 'digit',
+          items: [{
+            type: 'node',
+            items: [3, 4, 5],
+            measure: 3
+          }],
+          measure: 3
+        },
+        mid: {
+          type: 'empty',
+          measure: 0
+        },
+        right: {
+          type: 'digit',
+          items: [{
+            type: 'node',
+            items: [6, 7, 8],
+            measure: 3
+          }],
+          measure: 3
+        },
+        measure: 6
+      },
+      right: {
+        type: 'digit',
+        items: [9],
+        measure: 1
+      },
+      measure: 9
+    });
+  });
 });
