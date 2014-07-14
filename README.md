@@ -37,7 +37,7 @@ var FingerTree = require('fingertree');
 // Create a finger-tree from an array
 // By default, the tree is annotated with a size measurer.
 var tree = FingerTree.fromArray([1, 2, 3, 4]);
-tree.measure; // 4
+tree.measure(); // 4
 
 tree.peekFirst(); // 1
 tree.peekLast();  // 4
@@ -62,8 +62,8 @@ tree5.peekLast(); // 3
 var split = tree.split(function (measure) {
   return measure > 3;
 });
-split[0].measure; // 3
-split[1].measure; // 1
+split[0].measure(); // 3
+split[1].measure(); // 1
 
 
 // Create a finger-tree with a custom measurer.
@@ -79,7 +79,7 @@ var measurer = {
   }
 };
 var maxTree = FingerTree.fromArray([1, 3, 2, 9, 7], measurer);
-maxTree.measure; // 9
+maxTree.measure(); // 9
 ```
 
 
