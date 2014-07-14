@@ -382,7 +382,7 @@
   Empty.prototype.toJSON = function () {
     return {
       type: 'empty',
-      measure: this.measure
+      measure: this.measure()
     };
   };
 
@@ -490,7 +490,7 @@
    * @inheritDoc
    */
   Single.prototype.split = function (predicate) {
-    if (predicate(this.measure)) {
+    if (predicate(this.measure())) {
       return [this, new Empty(this.measurer)];
     }
     return [new Empty(this.measurer), this];
@@ -503,7 +503,7 @@
     return {
       type: 'single',
       value: this.value,
-      measure: this.measure
+      measure: this.measure()
     };
   };
 
@@ -741,7 +741,7 @@
       left: this.left,
       mid: this.mid,
       right: this.right,
-      measure: this.measure
+      measure: this.measure()
     };
   };
 
