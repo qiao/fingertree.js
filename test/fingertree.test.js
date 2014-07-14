@@ -75,10 +75,10 @@ describe('Finger Tree', function () {
 
   it('should be annotated with default measurer', function () {
     var tree = FingerTree.fromArray([1, 2, 3]);
-    tree.measure.should.eql(3);
+    tree.measure().should.eql(3);
 
     tree = FingerTree.fromArray(range(1000));
-    tree.measure.should.eql(1000);
+    tree.measure().should.eql(1000);
   });
 
   it('should be able to be split into two halves given a predicate', function () {
@@ -86,8 +86,8 @@ describe('Finger Tree', function () {
     var split = tree.split(function (x) {
       return x > 50;
     });
-    split[0].measure.should.eql(50);
-    split[1].measure.should.eql(50);
+    split[0].measure().should.eql(50);
+    split[1].measure().should.eql(50);
   });
 
   it('should be able to be annotated with custom measurer', function () {
@@ -103,6 +103,6 @@ describe('Finger Tree', function () {
       }
     };
     var tree = FingerTree.fromArray([1, 4, 3, 5, 2, 9], measurer);
-    tree.measure.should.eql(9);
+    tree.measure().should.eql(9);
   });
 });
