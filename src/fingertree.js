@@ -828,6 +828,13 @@
   /**
    * @inheritDoc
    */
+  DelayedFingerTree.prototype.splitTree = function (predicate, initial) {
+    return this.force().splitTree(predicate, initial);
+  };
+
+  /**
+   * @inheritDoc
+   */
   DelayedFingerTree.prototype.split = function (predicate) {
     return this.force().split(predicate);
   };
