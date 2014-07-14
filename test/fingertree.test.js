@@ -84,18 +84,40 @@ describe('Finger Tree', function () {
     tree = tree.addLast(4);
     tree.peekLast().should.equal(4);
 
+    tree = FingerTree.fromArray([]);
+    for (var i = 0; i < 5; ++i) {
+      tree = tree.addLast(i);
+    }
+    tree = tree.addLast(5);
+    tree.peekLast().should.equal(5);
+
     tree = FingerTree.fromArray(range(1000));
     tree = tree.addLast(1000);
     tree.peekLast().should.equal(1000);
   });
 
   it('should be able to get a new tree with the first element removed', function () {
-    var tree = FingerTree.fromArray([1, 2, 3]).removeFirst();
+    var tree = FingerTree.fromArray([1, 2]).removeFirst();
+    tree.peekFirst().should.eql(2);
+
+    tree = FingerTree.fromArray([1, 2, 3]).removeFirst();
     tree.peekFirst().should.eql(2);
     tree.peekLast().should.eql(3);
 
+    tree = FingerTree.fromArray([1, 2]).addLast(3).removeFirst();
+    tree.peekFirst().should.eql(2);
+    tree.peekLast().should.eql(3);
+    
+
     tree = FingerTree.fromArray(range(1000)).removeFirst();
     tree.peekFirst().should.eql(1);
+    tree.peekLast().should.eql(999);
+
+    tree = FingerTree.fromArray(range(1000));
+    for (var i = 0; i < 10; ++i) {
+      tree = tree.removeFirst();
+    }
+    tree.peekFirst().should.eql(10);
     tree.peekLast().should.eql(999);
   });
 
@@ -111,6 +133,13 @@ describe('Finger Tree', function () {
     tree = FingerTree.fromArray(range(1000)).removeLast();
     tree.peekFirst().should.eql(0);
     tree.peekLast().should.eql(998);
+
+    tree = FingerTree.fromArray(range(1000));
+    for (var i = 0; i < 10; ++i) {
+      tree = tree.removeLast();
+    }
+    tree.peekFirst().should.eql(0);
+    tree.peekLast().should.eql(989);
   });
 
   it('should be able to concat two trees into one', function () {
@@ -169,6 +198,20 @@ describe('Finger Tree', function () {
     });
     split[0].measure().should.eql(50);
     split[1].measure().should.eql(50);
+
+    tree = FingerTree.fromArray(range(100));
+    split = tree.split(function (x) {
+      return x > 99;
+    });
+    split[0].measure().should.eql(99);
+    split[1].measure().should.eql(1);
+
+    tree = FingerTree.fromArray(range(100));
+    split = tree.split(function (x) {
+      return x > 100;
+    });
+    split[0].measure().should.eql(100);
+    split[1].isEmpty().should.be.true;
   });
 
   it('should be able to be annotated with custom measurer', function () {
