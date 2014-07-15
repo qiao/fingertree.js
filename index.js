@@ -1,3 +1,3 @@
-module.exports = process.env.TEST_COV ? 
+module.exports = process.env.FINGERTREE_TEST_COV ? 
   require('./src-cov/fingertree') :
   require('./src/fingertree');

@@ -13,7 +13,7 @@ test:
 			test
 
 test-cov: src-cov
-	@TEST_COV=1 $(MAKE) test TEST_REPORTER=html-cov > coverage.html
+	@FINGERTREE_TEST_COV=1 $(MAKE) test TEST_REPORTER=html-cov > coverage.html
 
 src-cov: clean
 	@jscoverage src src-cov
