@@ -1,7 +1,8 @@
 var FingerTree = require('..');
 
-
 var t, i, len = 100000;
+
+console.log('number of operations: ', len);
 
 console.time('addFirst');
 t = FingerTree.fromArray([]);
