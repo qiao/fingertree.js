@@ -917,7 +917,7 @@
                                           .concat(ts)
                                           .concat(t2.left.items)),
                                   t2.mid);
-                      }),
+                    }),
                     t2.right);
   }
 
