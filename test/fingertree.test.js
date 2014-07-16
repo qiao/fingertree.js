@@ -146,22 +146,32 @@ describe('Finger Tree', function () {
     var tree = FingerTree.fromArray([]).concat(FingerTree.fromArray([1, 2, 3]));
     tree.peekFirst().should.eql(1);
     tree.peekLast().should.eql(3);
+    tree.measure().should.eql(3);
 
     tree = FingerTree.fromArray([1, 2, 3]).concat(FingerTree.fromArray([]));
     tree.peekFirst().should.eql(1);
     tree.peekLast().should.eql(3);
+    tree.measure().should.eql(3);
 
     tree = FingerTree.fromArray([1]).concat(FingerTree.fromArray([2, 3]));
     tree.peekFirst().should.eql(1);
     tree.peekLast().should.eql(3);
+    tree.measure().should.eql(3);
 
     tree = FingerTree.fromArray([1, 2]).concat(FingerTree.fromArray([3]));
     tree.peekFirst().should.eql(1);
     tree.peekLast().should.eql(3);
+    tree.measure().should.eql(3);
 
     tree = FingerTree.fromArray([1, 2, 3]).concat(FingerTree.fromArray([4, 5, 6]));
     tree.peekFirst().should.eql(1);
     tree.peekLast().should.eql(6);
+    tree.measure().should.eql(6);
+
+    tree = FingerTree.fromArray(range(100)).concat(FingerTree.fromArray(range(100)));
+    tree.peekFirst().should.eql(0);
+    tree.peekLast().should.eql(99);
+    tree.measure().should.eql(200);
   });
 
   it('should be annotated with default measurer', function () {
