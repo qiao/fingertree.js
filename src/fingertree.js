@@ -938,7 +938,8 @@
       case 6: return [new Node(m, [xs[0], xs[1], xs[2]]),
                       new Node(m, [xs[3], xs[4], xs[5]])];
       case 7: return [new Node(m, [xs[0], xs[1], xs[2]]),
-                      new Node(m, [xs[3], xs[4], xs[5]])];
+                      new Node(m, [xs[3], xs[4]]),
+                      new Node(m, [xs[5], xs[6]])];
       case 8: return [new Node(m, [xs[0], xs[1], xs[2]]),
                       new Node(m, [xs[3], xs[4], xs[5]]),
                       new Node(m, [xs[6], xs[7]])];
