@@ -258,6 +258,15 @@ describe('Finger Tree', function () {
     tree.peekLast().should.eql(5);
   });
 
+  it('should be able to map a function onto the elements', function () {
+    var tree = FingerTree.fromArray([1, 2, 3, 4, 5]).map(function (x) {
+      return x * x;
+    });
+    tree.measure().should.eql(5);
+    tree.peekFirst().should.eql(1);
+    tree.peekLast().should.eql(25);
+  });
+
   it('should be able to be serialized into JSON', function () {
     var tree = FingerTree.fromArray([]);
     JSON.parse(JSON.stringify(tree)).should.eql({
