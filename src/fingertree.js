@@ -301,6 +301,24 @@
   FingerTree.prototype.split = notImplemented;
 
   /**
+   * Take elements from the tree until the predicate is returning false.
+   * @param {function(*): boolean} predicate
+   * @return {FingerTree}
+   */
+  FingerTree.prototype.takeUntil = function (predicate) {
+    return this.split(predicate)[0];
+  };
+
+  /**
+   * Drop elements from the tree until the predicate is returning false.
+   * @param {function(*): boolean} predicate
+   * @return {FingerTree}
+   */
+  FingerTree.prototype.dropUntil = function (predicate) {
+    return this.split(predicate)[1];
+  };
+
+  /**
    * Return the JSON representation of the tree.
    * @return {Object}
    */
