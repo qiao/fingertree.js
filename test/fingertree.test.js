@@ -240,6 +240,24 @@ describe('Finger Tree', function () {
     tree.measure().should.eql(9);
   });
 
+  it('should be able to take elements until a predicate is returning true', function () {
+    var tree = FingerTree.fromArray([1, 2, 3, 4, 5]).takeUntil(function (m) {
+      return m > 3;
+    });
+    tree.measure().should.eql(3);
+    tree.peekFirst().should.eql(1);
+    tree.peekLast().should.eql(3);
+  });
+
+  it('should be able to drop elements until a predicate is returning true', function () {
+    var tree = FingerTree.fromArray([1, 2, 3, 4, 5]).dropUntil(function (m) {
+      return m > 3;
+    });
+    tree.measure().should.eql(2);
+    tree.peekFirst().should.eql(4);
+    tree.peekLast().should.eql(5);
+  });
+
   it('should be able to be serialized into JSON', function () {
     var tree = FingerTree.fromArray([]);
     JSON.parse(JSON.stringify(tree)).should.eql({
