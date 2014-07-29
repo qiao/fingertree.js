@@ -19,6 +19,8 @@
     "datastructure",
     "algorithm",
     "persistent",
+    "functional",
+    "immutable",
     "tree"
   ],
   "author": "Xueqiao Xu <xueqiaoxu@gmail.com>",
