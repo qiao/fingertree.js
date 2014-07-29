@@ -62,7 +62,7 @@
   /**
    * A digit is a measured container of one to four elements.
    * @constructor
-   * @param {function} measurer
+   * @param {Object.<string, function>} measurer
    * @param {Array.<*>} items
    */
   function Digit(measurer, items) {
@@ -180,6 +180,8 @@
   /**
    * A node is a measured container of either 2 or 3 sub-finger-trees.
    * @constructor
+   * @param {Object.<string, function>} measurer
+   * @param {Array.<FingerTree>} items
    */
   function Node(measurer, items) {
     this.items = items;
@@ -329,6 +331,7 @@
    * An empty finger-tree.
    * @constructor
    * @implements {FingerTree}
+   * @param {Object.<string, function>} measurer
    */
   function Empty(measurer) {
     this.measurer = measurer;
@@ -409,6 +412,8 @@
    * A finger-tree which contains exactly one element.
    * @constructor
    * @implements {FingerTree}
+   * @param {Object.<string, function>} measurer
+   * @param {*} value
    */
   function Single(measurer, value) {
     this.value = value;
@@ -530,6 +535,10 @@
    * A finger-tree which contains two or more elements.
    * @constructor
    * @implements {FingerTree}
+   * @param {Object.<string, function>} measurer
+   * @param {Digit} left
+   * @param {FingerTree} mid
+   * @param {Digit} right
    */
   function Deep(measurer, left, mid, right) {
     /**
