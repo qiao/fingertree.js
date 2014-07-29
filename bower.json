@@ -1,0 +1,32 @@
+{
+  "name": "fingertree.js",
+  "main": "src/fingertree.js",
+  "version": "0.1.4",
+  "homepage": "https://github.com/qiao/fingertree.js",
+  "authors": [
+    "Xueqiao Xu <xueqiaoxu@gmail.com>"
+  ],
+  "description": "Finger Tree data structure",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "fingertree",
+    "datastructure",
+    "algorithm",
+    "persistent",
+    "functional",
+    "immutable",
+    "tree"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
