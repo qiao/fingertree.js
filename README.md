@@ -8,6 +8,11 @@ sequences, priority-queues, ordered sequences, interval trees, etc.
 
 Based on: Ralf Hinze and Ross Paterson, ["Finger trees: a simple general-purpose data structure"](http://www.soi.city.ac.uk/~ross/papers/FingerTree.html).
 
+Note that Finger Tree is not meant to be used on its own.
+Instead, it should serve as an infrastructure for building other data structures.
+As an example, [immutable-sequence.js](https://github.com/qiao/immutable-sequence.js) is an immutable
+random-access sequence implementation built on top of this library.
+
 ## Installation (Browser)
 
 Download the [js file](https://raw.githubusercontent.com/qiao/fingertree.js/master/src/fingertree.js) and include it in your web page.
