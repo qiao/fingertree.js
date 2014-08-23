@@ -745,7 +745,7 @@
     var split = right.split(predicate, midMeasure);
     return new Split(deepRight(measurer, left, mid, split.left),
                      split.mid,
-                     fromArray(split.left, measurer));
+                     fromArray(split.right, measurer));
   };
 
   /**
