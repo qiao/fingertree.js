@@ -14,20 +14,20 @@ describe('Finger Tree', function () {
 
   it('should construct an empty tree when given an empty array', function () {
     var tree = FingerTree.fromArray([]);
-    tree.isEmpty().should.be.true;
+      tree.isEmpty().should.be.true();
   });
 
   it('should construct a tree containing initial elements', function () {
     var tree = FingerTree.fromArray([1, 2, 3]);
-    tree.isEmpty().should.be.false;
+      tree.isEmpty().should.be.false();
 
     tree = FingerTree.fromArray(range(1000));
-    tree.isEmpty().should.be.false;
+      tree.isEmpty().should.be.false();
   });
 
   it('should be able to get the first element', function () {
     var tree = FingerTree.fromArray([]);
-    (tree.peekFirst() === null).should.be.true;
+      (tree.peekFirst() === null).should.be.true();
 
     tree = FingerTree.fromArray([1]);
     tree.peekFirst().should.eql(1);
@@ -41,7 +41,7 @@ describe('Finger Tree', function () {
 
   it('should be able to get the last element', function () {
     var tree = FingerTree.fromArray([]);
-    (tree.peekLast() === null).should.be.true;
+      (tree.peekLast() === null).should.be.true();
 
     tree = FingerTree.fromArray([1]);
     tree.peekLast().should.eql(1);
@@ -129,8 +129,8 @@ describe('Finger Tree', function () {
 
   it('should be able to get a new tree with the last element removed', function () {
     var tree = FingerTree.fromArray([1]).removeLast();
-    (tree.peekFirst() === null).should.be.true;
-    (tree.peekLast() === null).should.be.true;
+      (tree.peekFirst() === null).should.be.true();
+      (tree.peekLast() === null).should.be.true();
 
     tree = FingerTree.fromArray([1, 2, 3]).removeLast();
     tree.peekFirst().should.eql(1);
@@ -191,33 +191,33 @@ describe('Finger Tree', function () {
   it('should be able to be split into two halves given a predicate', function () {
     var tree = FingerTree.fromArray([]);
     var split = tree.split(function (x) { return true; });
-    split[0].isEmpty().should.be.true;
-    split[1].isEmpty().should.be.true;
+      split[0].isEmpty().should.be.true();
+      split[1].isEmpty().should.be.true();
 
     tree = FingerTree.fromArray([1]);
     split = tree.split(function (x) {
       return x > 0;
     });
     split[0].measure().should.eql(1);
-    split[1].isEmpty().should.be.true;
+      split[1].isEmpty().should.be.true();
 
     tree = FingerTree.fromArray([1]);
     split = tree.split(function (x) {
       return x > 1;
     });
-    split[0].isEmpty().should.be.true;
+      split[0].isEmpty().should.be.true();
     split[1].measure().should.eql(1);
 
     tree = FingerTree.fromArray(range(100));
     split = tree.split(function (x) {
-      return x > 50;
+      return x >= 50;
     });
     split[0].measure().should.eql(50);
     split[1].measure().should.eql(50);
 
     tree = FingerTree.fromArray(range(100));
     split = tree.split(function (x) {
-      return x > 99;
+      return x >= 99;
     });
     split[0].measure().should.eql(99);
     split[1].measure().should.eql(1);
@@ -227,7 +227,7 @@ describe('Finger Tree', function () {
       return x > 100;
     });
     split[0].measure().should.eql(100);
-    split[1].isEmpty().should.be.true;
+      split[1].isEmpty().should.be.true();
   });
 
   it('should be able to be annotated with custom measurer', function () {
@@ -248,7 +248,7 @@ describe('Finger Tree', function () {
 
   it('should be able to take elements until a predicate is returning true', function () {
     var tree = FingerTree.fromArray([1, 2, 3, 4, 5]).takeUntil(function (m) {
-      return m > 3;
+      return m >= 3;
     });
     tree.measure().should.eql(3);
     tree.peekFirst().should.eql(1);
@@ -257,7 +257,7 @@ describe('Finger Tree', function () {
 
   it('should be able to drop elements until a predicate is returning true', function () {
     var tree = FingerTree.fromArray([1, 2, 3, 4, 5]).dropUntil(function (m) {
-      return m > 3;
+      return m >= 3;
     });
     tree.measure().should.eql(2);
     tree.peekFirst().should.eql(4);
