@@ -136,7 +136,7 @@
 
   /**
    * Split the digit into 3 parts, in which the left part is the elements
-   * that does not satisfy the predicate, the middle part is the first 
+   * that do not satisfy the predicate, the middle part is the first 
    * element that satisfies the predicate and the last part is the rest
    * elements.
    * @param {Function} predicate A function which returns either true or false
@@ -293,17 +293,17 @@
 
   /**
    * Split the tree into two halves, where the first half is a finger-tree
-   * which contains all the elements that satisfy the given predicate,
-   * while the ones from the other half do not.
+   * which contains all the elements that do not satisfy the given predicate,
+   * while the ones from the other half do.
    * @param {function(*): boolean} predicate
    * @return {Array.<FingerTree>} An array with the first element being a
-   *   finger-tree that contains all the satisfying elements and the second
+   *   finger-tree that contains all the nonsatisfying elements and the second
    *   element being a finger-tree that contains all the other elements.
    */
   FingerTree.prototype.split = notImplemented;
 
   /**
-   * Take elements from the tree until the predicate is returning false.
+   * Take elements from the tree until the predicate returns true.
    * @param {function(*): boolean} predicate
    * @return {FingerTree}
    */
@@ -312,7 +312,7 @@
   };
 
   /**
-   * Drop elements from the tree until the predicate is returning false.
+   * Drop elements from the tree until the predicate is returns true.
    * @param {function(*): boolean} predicate
    * @return {FingerTree}
    */
@@ -514,9 +514,9 @@
    */
   Single.prototype.split = function (predicate) {
     if (predicate(this.measure())) {
-      return [this, new Empty(this.measurer)];
+        return [new Empty(this.measurer), this];
     }
-    return [new Empty(this.measurer), this];
+    return [this, new Empty(this.measurer)];
   };
 
   /**
