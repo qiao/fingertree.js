@@ -198,15 +198,15 @@ describe('Finger Tree', function () {
     split = tree.split(function (x) {
       return x > 0;
     });
-    split[0].measure().should.eql(1);
-    split[1].isEmpty().should.be.true;
+    split[0].isEmpty().should.be.true;
+    split[1].measure().should.eql(1);
 
     tree = FingerTree.fromArray([1]);
     split = tree.split(function (x) {
       return x > 1;
     });
-    split[0].isEmpty().should.be.true;
-    split[1].measure().should.eql(1);
+    split[0].measure().should.eql(1);
+    split[1].isEmpty().should.be.true;
 
     tree = FingerTree.fromArray(range(100));
     split = tree.split(function (x) {
