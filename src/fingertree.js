@@ -514,7 +514,7 @@
    */
   Single.prototype.split = function (predicate) {
     if (predicate(this.measure())) {
-        return [new Empty(this.measurer), this];
+      return [new Empty(this.measurer), this];
     }
     return [this, new Empty(this.measurer)];
   };
