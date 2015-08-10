@@ -1,6 +1,6 @@
 {
   "name": "fingertree",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Finger Tree data structure",
   "main": "index.js",
   "scripts": {
