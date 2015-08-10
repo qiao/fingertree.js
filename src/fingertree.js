@@ -869,6 +869,27 @@
   /**
    * @inheritDoc
    */
+  DelayedFingerTree.prototype.concat = function (other) {
+    return this.force().concat(other);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.takeUntil = function (predicate) {
+    return this.force().takeUntil(predicate);
+  };
+
+  /**
+   * @inheritDoc
+   */
+  DelayedFingerTree.prototype.dropUntil = function (predicate) {
+    return this.force().dropUntil(predicate);
+  };
+
+  /**
+   * @inheritDoc
+   */
   DelayedFingerTree.prototype.toJSON = function () {
     return this.force().toJSON();
   };
