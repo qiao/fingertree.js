@@ -976,23 +976,24 @@
    * @return {Array}
    */
   function nodes(m, xs) {
-    switch (xs.length) {
-      case 2: return [new Node(m, xs)];
-      case 3: return [new Node(m, xs)];
-      case 4: return [new Node(m, [xs[0], xs[1]]),
-                      new Node(m, [xs[2], xs[3]])];
-      case 5: return [new Node(m, [xs[0], xs[1], xs[2]]),
-                      new Node(m, [xs[3], xs[4]])];
-      case 6: return [new Node(m, [xs[0], xs[1], xs[2]]),
-                      new Node(m, [xs[3], xs[4], xs[5]])];
-      case 7: return [new Node(m, [xs[0], xs[1], xs[2]]),
-                      new Node(m, [xs[3], xs[4]]),
-                      new Node(m, [xs[5], xs[6]])];
-      case 8: return [new Node(m, [xs[0], xs[1], xs[2]]),
-                      new Node(m, [xs[3], xs[4], xs[5]]),
-                      new Node(m, [xs[6], xs[7]])];
-      default: throw new Error('invalid number of nodes');
+    var n = xs.length, ns = [], i = 0;
+    if (n < 2) {
+      throw new Error('invalid number of nodes');
     }
+    while (n > 4) {
+      ns.push(new Node(m, xs.slice(i, i + 3)));
+      n -= 3;
+      i += 3;
+    }
+    if (n === 4) {
+      ns.push(new Node(m, xs.slice(i, i + 2)));
+      ns.push(new Node(m, xs.slice(i + 2)));
+    } else if (n >= 2) {
+      ns.push(new Node(m, xs.slice(i)));
+    } else {
+      throw new Error('cannot happen');
+    }
+    return ns;
   }
 
   /**
