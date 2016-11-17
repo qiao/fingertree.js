@@ -944,6 +944,12 @@
    * @return {FingerTree}
    */
   function app3(t1, ts, t2) {
+    if (t1 instanceof DelayedFingerTree) {
+      t1 = t1.force();
+    }
+    if (t2 instanceof DelayedFingerTree) {
+      t2 = t2.force();
+    }
     if (t1 instanceof Empty) {
       return prepend(t2, ts);
     }
